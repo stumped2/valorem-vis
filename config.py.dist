@@ -1,0 +1,3 @@
+import redis
+SECRET_KEY = 'this is not secret'
+CACHE = redis.StrictRedis(host='localhost', port=6379, db=0)
