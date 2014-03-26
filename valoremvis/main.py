@@ -22,7 +22,7 @@ def index(key):
         app.config['CACHE'].set(key, json.dumps(pubkeys))
         return jsonify({'success': True})
 
-    else: # querying data
-        if not value:
-            abort(404)
-        return jsonify({'value': json.loads(value) })
+    # querying data
+    if not value:
+        abort(404)
+    return jsonify({'value': json.loads(value) })
