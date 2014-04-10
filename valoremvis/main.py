@@ -39,58 +39,54 @@ def logout():
     session.pop('email', None)
     return redirect('/')
 
-@app.route('/<action>')
-def action(action):
-  session.permament = True
+@app.route('/store', methods=["GET"])
+def store():
+  session.permanent = True
+  if verify_store_args(request.args):
+    data = []
+    ia = request.args.getlist('Persona')
+    privly = request.args.getlist('Privly')
+    email_key = get_email_ia(ia[0])
+    pgp_key = get_pgp_ia(privly[0])
 
-  if action == 'store':
-    if verify_store_args(request.args):
-      data = []
-      ia = request.args.getlist('Persona')
-      privly = request.args.getlist('Privly')
-      email_key = get_email_ia(ia[0])
-      pgp_key = get_pgp_ia(privly[0])
-      
-      if email_key is None:
-        abort(400)
-      
-      if pgp_key is None:
-        abort(400)
-
-      data.append(ia[0])
-      data.append(privly[0])
-      app.config['CACHE'].set(email_key, json.dumps(data))
-      app.config['CACHE'].set(pgp_key, json.dumps(data))
-      
-      return jsonify({'success': True})
-  
-    else:
+    if email_key is None:
       abort(400)
-  
-  elif action == 'search':
-    if verify_search_args(request.args):
-      if 'PGP' in request.args:
-        key = request.args.getlist('PGP')
-      elif 'Email' in request.args:
-        key = request.args.getlist('Email')
-      else: #catch all, should never get here because verify_search_args
-        abort(400)
 
-      data = app.config['CACHE'].get(key[0])
-      
-      if data is None:
-        abort(404)
-      
-      data = json.loads(data)
-      return jsonify({'Persona': data[0], 'Privly': data[1]})
-    
-    else:
+    if pgp_key is None:
       abort(400)
-  
+
+    data.append(ia[0])
+    data.append(privly[0])
+    app.config['CACHE'].set(email_key, json.dumps(data))
+    app.config['CACHE'].set(pgp_key, json.dumps(data))
+
+    return jsonify({'success': True})
+
   else:
     abort(400)
 
-# Get email for key from backed ia
+@app.route('/search', methods=["GET"])
+def search():
+  session.permanent = True
+  if verify_search_args(request.args):
+    if 'PGP' in request.args:
+      key = request.args.getlist('PGP')
+    elif 'Email' in request.args:
+      key = request.args.getlist('Email')
+    else: #catch all, should never get here because verify_search_args
+      abort(400)
+
+    data = app.config['CACHE'].get(key[0])
+    
+    if data is None:
+      abort(404)
+      
+    data = json.loads(data)
+    return jsonify({'Persona': data[0], 'Privly': data[1]})
+    
+  else:
+    abort(400)
+
 
 def verify_store_args(args):
   '''
@@ -175,4 +171,6 @@ def get_pgp_ia(privlyia):
       return None
   except:
     return None
+
+
 # TODO: Verify the pgp pub key and signature match]
