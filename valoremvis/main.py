@@ -1,17 +1,46 @@
 import json
 import redis
-
-from flask import Flask, session, request, abort, jsonify
+import requests
+from flask import Flask, session, request, abort, jsonify, render_template, redirect
 from lepl.apps.rfc3696 import Email
 from base64 import b64decode
 
 app = Flask(__name__)
 
 app.config.from_object('config')
-verifier = Email()
+
+
+@app.route('/')
+def index():
+  return render_template('index.html')
+
+@app.route('/auth/login', methods=["POST"])
+def login():
+    if 'assertion' not in request.form:
+        abort(400)
+
+    assertion_info = {'assertion': request.form['assertion'],
+                        'audience': 'localhost:5000' } # window.location.host
+    resp = requests.post('https://verifier.login.persona.org/verify',
+                        data=assertion_info, verify=True)
+
+    if not resp.ok:
+        abort(500)
+
+    data = resp.json()
+
+    if data['status'] == 'okay':
+        session.update({'email': data['email']})
+        print session
+        return resp.content
+
+@app.route('/auth/logout', methods=["POST"])
+def logout():
+    session.pop('email', None)
+    return redirect('/')
 
 @app.route('/<action>')
-def index(action):
+def action(action):
   session.permament = True
 
   if action == 'store':
