@@ -1,8 +1,7 @@
 {% extends "layout.html" %}
 {% block body %}
   {% if session.email %}  
-    <p>You are logged as {{ session.email }}</p>
-    <a href="#" id="signout"><span>Sign out</span></a>
+    <a href="/" id="signout"><span>Sign out</span></a>
   {% else %} 
     <a href="#" id="signin"><span>Sign in</span></a>
   {% endif %}
