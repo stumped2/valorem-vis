@@ -84,9 +84,9 @@ def search():
   session.permanent = True
 
   if verify_search_args(request.args):
-    if 'PGP' in request.args:
+    if 'pgp' in request.args:
       key = request.args.getlist('pgp')
-    elif 'Email' in request.args:
+    elif 'email' in request.args:
       key = request.args.getlist('email')
     else: #catch all, should never get here because verify_search_args
       abort(400)
