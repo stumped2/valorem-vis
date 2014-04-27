@@ -52,7 +52,8 @@ def store():
     email = request.args.getlist('email')
     pgp = request.args.getlist('pgp')
 
-    pgp_key = get_pgp_key(pgp[0])
+    #pgp_key = get_pgp_key(pgp[0])
+    pgp_key = pgp[0]
     email_key = email[0]
 
     if not verifier(email_key):
