@@ -24,31 +24,31 @@ using the ``store`` endpoint of the Directory Provider, you can upload a **PGP P
 The expected upload format is:
 ```javascript
 {
-    "Email": "<validly formatted email>"
-    "PGP": "<base64 encoded pgp public key>.<pgp signature>"
+    "email": "<validly formatted email>"
+    "pgp": "<base64 encoded pgp public key>.<pgp signature>"
 }
 ```
 
 All the uploading to the Directory Provider is handled by ``GET`` requests.
 Example:
 ```
-http://<ip or dns>:<port>/store?Email=<validly formatted email>&PGP=<pgp key>.<pgp signature>
+http://<ip or dns>:<port>/store?email=<validly formatted email>&pgp=<pgp key>.<pgp signature>
 ```
 The Directory Provider store the PGP information with the Persona information in the keystore using the email as the key. The Directory will also store the same information using the pgp key as the key value store key.
 
-If anything other than ``Email`` and ``PGP`` are sent to the directory provider, it will return a ``400`` error. If an incorrectly formatted backed identity assertion is uploaded, it will return a ``400`` as well.
+If anything other than ``email`` and ``pgp`` are sent to the directory provider, it will return a ``400`` error. If an incorrectly formatted backed identity assertion is uploaded, it will return a ``400`` as well.
 
 ## Searching
 Using the ``search`` endpoint of the directory provide, you can query the keyvalue store for the backed identity assertion and pgp public key by either **Email** or **PGP Public key**.
 An example is:
 ```
-http://<ip or dns>:<port>/search?Email=<validly formatted email>
+http://<ip or dns>:<port>/search?email=<validly formatted email>
 ```
 to search by email. To search by pgp public key:
 ```
-http://<ip or dns>:<port>/search?PGP=<pgp public key>
+http://<ip or dns>:<port>/search?pgp=<pgp public key>
 ```
 
 If the directory provider cannot find any information associated with the email or the pgp key, it will return a ``404`` error.
 
-If anything other than ``PGP`` or ``Email`` , it will return a ``400`` error.
+If anything other than ``pgp`` or ``email`` , it will return a ``400`` error.
