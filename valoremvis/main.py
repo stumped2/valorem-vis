@@ -49,8 +49,8 @@ def store():
 
   if verify_store_args(request.args):
     data = []
-    email = request.args.getlist('Email')
-    pgp = request.args.getlist('PGP')
+    email = request.args.getlist('email')
+    pgp = request.args.getlist('pgp')
 
     pgp_key = get_pgp_key(pgp[0])
     email_key = email[0]
@@ -85,9 +85,9 @@ def search():
 
   if verify_search_args(request.args):
     if 'PGP' in request.args:
-      key = request.args.getlist('PGP')
+      key = request.args.getlist('pgp')
     elif 'Email' in request.args:
-      key = request.args.getlist('Email')
+      key = request.args.getlist('email')
     else: #catch all, should never get here because verify_search_args
       abort(400)
 
@@ -130,9 +130,9 @@ def verify_store_args(args):
   '''
 
   if len(args) == 2:
-    if 'Email' in args and 'PGP' in args:
-      email = args.getlist('Email')
-      pgp = args.getlist('PGP')
+    if 'email' in args and 'pgp' in args:
+      email = args.getlist('email')
+      pgp = args.getlist('pgp')
       if len(email) == 1 and len(pgp) == 1:
         return True
       else:
@@ -152,14 +152,14 @@ def verify_search_args(args):
 
   verifier = Email()
   if len(args) == 1:
-    if 'PGP' in args:
-      pgp = args.getlist('PGP')
+    if 'pgp' in args:
+      pgp = args.getlist('pgp')
       if len(pgp) == 1:
         return True
       else:
         return False
-    elif 'Email' in args:
-      email = args.getlist('Email')
+    elif 'email' in args:
+      email = args.getlist('email')
       if len(email) == 1:
         if verifier(email[0]):
           return True
