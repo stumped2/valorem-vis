@@ -64,13 +64,12 @@ def store():
     if pgp_key is None:
       abort(400)
 
-    ia = app.config['CACHE'].get(email_key)
+    data = app.config['CACHE'].get(email_key)
 
-    if ia is None:
+    if data is None:
       abort(404)
 
-    ia = json.loads(ia)
-    data.append(ia[0]) # make sure we over write the old pgp key
+    data = json.loads(data)
     data.append(pgp[0])
     app.config['CACHE'].set(email_key, json.dumps(data))
     app.config['CACHE'].set(pgp_key, json.dumps(data))
@@ -98,7 +97,7 @@ def search():
       abort(404)
 
     data = json.loads(data)
-    return jsonify({'Persona': data[0], 'PGP': data[1]})
+    return jsonify({'Persona': data[0], 'PGP': data[len(data) - 1]})
 
   else:
     abort(400)
