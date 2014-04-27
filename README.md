@@ -20,23 +20,23 @@ Dead simple Flask key-value storage using redis. Valorem Vis is not tested for s
 
 # Interaction
 ## Uploading
-using the ``store`` endpoint of the Directory Provider, you can upload a **Backed Identity Assertion** as well as a **PGP Public Key** and the pgp key signature.
+using the ``store`` endpoint of the Directory Provider, you can upload a **PGP Public Key** and the pgp key signature.
 The expected upload format is:
 ```javascript
 {
-   "Persona": "<base64 encoded pserona backed identity assertion>",
-    "Privly": "<base64 encoded pgp public key>.<pgp signature>"
+    "Email": "<validly formatted email>"
+    "PGP": "<base64 encoded pgp public key>.<pgp signature>"
 }
 ```
 
 All the uploading to the Directory Provider is handled by ``GET`` requests.
 Example:
 ```
-http://<ip or dns>:<port>/store?Persona=<backed identity assertion>&Privly=<pgp key>.<pgp signature>
+http://<ip or dns>:<port>/store?Email=<validly formatted email>&PGP=<pgp key>.<pgp signature>
 ```
-The Directory Provider will then verify the backed identity assertion with a persona verifier, decompose the backed ia to extract the email, and then store the Privly information and Persona information in the keystore using the email as the key. The Directory will also sotre the same information using the pgp key as the key value store key.
+The Directory Provider store the PGP information with the Persona information in the keystore using the email as the key. The Directory will also store the same information using the pgp key as the key value store key.
 
-If anything other than ``Privly`` and ``Persona`` are sent to the directory provider, it will return a ``400`` error. If an incorrectly formatted backed identity assertion is uploaded, it will return a ``400`` as well.
+If anything other than ``Email`` and ``PGP`` are sent to the directory provider, it will return a ``400`` error. If an incorrectly formatted backed identity assertion is uploaded, it will return a ``400`` as well.
 
 ## Searching
 Using the ``search`` endpoint of the directory provide, you can query the keyvalue store for the backed identity assertion and pgp public key by either **Email** or **PGP Public key**.
