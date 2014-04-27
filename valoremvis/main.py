@@ -31,7 +31,10 @@ def login():
 
     if data['status'] == 'okay':
         session.update({'email': data['email']})
-        print session
+        email_key = get_email_ia(request.form['assertion'])
+        data = []
+        data.append(request.form['assertion'])
+        app.config['CACHE'].set(email_key, json.dumps(data))
         return resp.content
 
 @app.route('/auth/logout', methods=["POST"])
@@ -42,12 +45,18 @@ def logout():
 @app.route('/store', methods=["GET"])
 def store():
   session.permanent = True
+  verifier = Email()
+
   if verify_store_args(request.args):
     data = []
-    ia = request.args.getlist('Persona')
-    privly = request.args.getlist('Privly')
-    email_key = get_email_ia(ia[0])
-    pgp_key = get_pgp_ia(privly[0])
+    email = request.args.getlist('Email')
+    pgp = request.args.getlist('PGP')
+
+    pgp_key = get_pgp_key(pgp[0])
+    email_key = email[0]
+
+    if not verifier(email_key):
+      abort(400)
 
     if email_key is None:
       abort(400)
@@ -55,8 +64,14 @@ def store():
     if pgp_key is None:
       abort(400)
 
-    data.append(ia[0])
-    data.append(privly[0])
+    ia = app.config['CACHE'].get(email_key)
+
+    if ia is None:
+      abort(404)
+
+    ia = json.loads(ia)
+    data.append(ia[0]) # make sure we over write the old pgp key
+    data.append(pgp[0])
     app.config['CACHE'].set(email_key, json.dumps(data))
     app.config['CACHE'].set(pgp_key, json.dumps(data))
 
@@ -68,6 +83,7 @@ def store():
 @app.route('/search', methods=["GET"])
 def search():
   session.permanent = True
+
   if verify_search_args(request.args):
     if 'PGP' in request.args:
       key = request.args.getlist('PGP')
@@ -77,29 +93,48 @@ def search():
       abort(400)
 
     data = app.config['CACHE'].get(key[0])
-    
+
     if data is None:
       abort(404)
-      
+
     data = json.loads(data)
-    return jsonify({'Persona': data[0], 'Privly': data[1]})
-    
+    return jsonify({'Persona': data[0], 'PGP': data[1]})
+
   else:
     abort(400)
 
 
+def get_email_ia(backedia):
+  '''
+  Rudamentory format checking of the backed ia.
+  Given a backed identity assertion, it will extrac the email from it
+  to be used as a key for storage.
+  '''
+
+  verifier = Email()
+  try:
+    ia = backedia.replace('~','.').split('.')
+    cert = b64decode(ia[1])
+    cert = json.loads(cert)
+    if verifier(cert['principal']['email']):
+      return cert['principal']['email']
+    else:
+      return None
+  except:
+    return None
+
 def verify_store_args(args):
   '''
   len of args must be 2.
-  "Persona" and "Privly must be keys in args.
+  "Email" and "PGP" must be keys in args.
   len of list of data associated with each key must be 1.
   '''
 
   if len(args) == 2:
-    if 'Persona' in args and 'Privly' in args:
-      ia = args.getlist('Persona')
-      privly = args.getlist('Privly')
-      if len(ia) == 1 and len(privly) == 1:
+    if 'Email' in args and 'PGP' in args:
+      email = args.getlist('Email')
+      pgp = args.getlist('PGP')
+      if len(email) == 1 and len(pgp) == 1:
         return True
       else:
         return False
@@ -138,33 +173,15 @@ def verify_search_args(args):
   else:
     return False
 
-def get_email_ia(backedia):
-  '''
-  Rudamentory format checking of the backed ia.
-  Given a backed identity assertion, it will extrac the email from it
-  to be used as a key for storage.
-  '''
 
-  verifier = Email()
-  try:
-    ia = backedia.replace('~','.').split('.')
-    cert = b64decode(ia[1])
-    cert = json.loads(cert)
-    if verifier(cert['principal']['email']):
-      return cert['principal']['email']
-    else:
-      return None
-  except:
-    return None
-
-def get_pgp_ia(privlyia):
+def get_pgp_key(pgp):
   '''
   Rudamentory format checking for Privly assertion.
   Will extract a PGP public key to be used as a key in storage.
   '''
 
   try:
-    ia = privlyia.split('.')
+    ia = pgp.split('.')
     if len(ia) == 2:
       return ia[0]
     else:
