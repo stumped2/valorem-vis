@@ -1,9 +1,9 @@
 {% extends "layout.html" %}
 {% block body %}
   {% if session.email %}  
-    <a href="/" id="signout"><span>Sign out</span></a>
+    <a href="/" class="persona-button dark" id="signout"><span>Sign out</span></a>
   {% else %} 
-    <a href="#" id="signin"><span>Sign in</span></a>
+    <a href="#" class="persona-button dark" id="signin"><span>Sign in</span></a>
   {% endif %}
 {% endblock %}
 {% block footer %}
