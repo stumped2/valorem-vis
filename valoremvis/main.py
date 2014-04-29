@@ -25,6 +25,7 @@ def login():
                         data=assertion_info, verify=True)
 
     if not resp.ok:
+        print "Invalid response from remote verifier"
         abort(500)
 
     data = resp.json()
@@ -57,17 +58,21 @@ def store():
     email_key = email[0]
 
     if not verifier(email_key):
+      print "Incorrect email"
       abort(400)
 
     if email_key is None:
+      print "email not found"
       abort(400)
 
     if pgp_key is None:
+      print "PGP key not found"
       abort(400)
 
     data = app.config['CACHE'].get(email_key)
 
     if data is None:
+      print "email not found in storage"
       abort(404)
 
     data = json.loads(data)
@@ -78,6 +83,7 @@ def store():
     return jsonify({'success': True})
 
   else:
+    print "Incorrect in general url"
     abort(400)
 
 @app.route('/search', methods=["GET"])
@@ -95,12 +101,14 @@ def search():
     data = app.config['CACHE'].get(key[0])
 
     if data is None:
+      print "backed ia not found"
       abort(404)
 
     data = json.loads(data)
     return jsonify({'Persona': data[0], 'PGP': data[len(data) - 1]})
 
   else:
+    print "Incorrect search url"
     abort(400)
 
 
@@ -109,18 +117,40 @@ def get_email_ia(backedia):
   Rudamentory format checking of the backed ia.
   Given a backed identity assertion, it will extrac the email from it
   to be used as a key for storage.
+
+  BUG: It seems persona right now is sending back incorrectly padded certs
+       for some email addresses. Our current fix is to add a single or a double
+       '=' character. If that still doesn't work, then fail outright.
   '''
 
   verifier = Email()
   try:
     ia = backedia.replace('~','.').split('.')
-    cert = b64decode(ia[1])
-    cert = json.loads(cert)
-    if verifier(cert['principal']['email']):
-      return cert['principal']['email']
-    else:
-      return None
   except:
+    print "Invalid backed identity assertion format"
+    return None
+
+  try:
+    cert = b64decode(ia[1])
+  except TypeError:
+    print "Concluding Cert needs padding 1"
+    ia[1] += "="  # add first padding char
+    try:
+      cert = b64decode(ia[1])
+    except TypeError:
+      print "Concluding Cert needs padding 2"
+      ia[1] += "="  # add second padding char
+      try:
+        cert = b64decode(ia[1])
+      except:
+        print "Concluding invalid Cert."
+        return None
+
+  cert = json.loads(cert)
+  if verifier(cert['principal']['email']):
+    return cert['principal']['email']
+  else:
+    print "Invalid email format"
     return None
 
 def verify_store_args(args):
