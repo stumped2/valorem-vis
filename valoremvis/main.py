@@ -105,7 +105,7 @@ def search():
       abort(404)
 
     data = json.loads(data)
-    return jsonify({'Persona': data[0], 'PGP': data[len(data) - 1]})
+    return jsonify({'bia': data[0], 'pgp': data[len(data) - 1]})
 
   else:
     print "Incorrect search url"
