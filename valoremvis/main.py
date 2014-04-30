@@ -78,11 +78,11 @@ def store():
 
     if data is None:
       print "email not found in storage"
-      data = [None, None]
+      data = [None]
     else:
       data = json.loads(data)
 
-    data[1] = pgp[0]
+    data.append(pgp[0])
     app.config['CACHE'].set(email_key, json.dumps(data))
     app.config['CACHE'].set(pgp_key, json.dumps(data))
 
@@ -102,6 +102,7 @@ def search():
     elif 'email' in request.args:
       key = request.args.getlist('email')
     else: #catch all, should never get here because verify_search_args
+      print "Incorrect query url"
       abort(400)
 
     data = app.config['CACHE'].get(key[0])
@@ -111,6 +112,14 @@ def search():
       abort(404)
 
     data = json.loads(data)
+    if data[0] is None:
+      print "Invlaid store. No bia associated with this key"
+      abort(404)
+
+    if len(data) < 2:
+      print "Invalid store. No pgp key associated."
+      abort(404)
+
     return jsonify({'bia': data[0], 'pgp': data[len(data) - 1]})
 
   else:
