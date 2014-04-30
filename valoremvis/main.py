@@ -33,8 +33,13 @@ def login():
     if data['status'] == 'okay':
         session.update({'email': data['email']})
         email_key = get_email_ia(request.form['assertion'])
-        data = []
-        data.append(request.form['assertion'])
+        data = app.config['CACHE'].get(email_key)
+        if data is None:
+          data = [None]
+        else:
+          data = json.loads(data)
+
+        data[0] = request.form['assertion']
         app.config['CACHE'].set(email_key, json.dumps(data))
         return resp.content
 
@@ -73,10 +78,11 @@ def store():
 
     if data is None:
       print "email not found in storage"
-      abort(404)
+      data = [None, None]
+    else:
+      data = json.loads(data)
 
-    data = json.loads(data)
-    data.append(pgp[0])
+    data[1] = pgp[0]
     app.config['CACHE'].set(email_key, json.dumps(data))
     app.config['CACHE'].set(pgp_key, json.dumps(data))
 
