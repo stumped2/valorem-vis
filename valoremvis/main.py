@@ -4,6 +4,7 @@ import requests
 from flask import Flask, session, request, abort, jsonify, render_template, redirect, Response
 from lepl.apps.rfc3696 import Email
 from base64 import b64decode
+from dirp_storage import which_store
 
 app = Flask(__name__)
 
@@ -17,7 +18,6 @@ def index():
 @app.route('/auth/login', methods=["POST"])
 def login():
 
-    matched = False
 
     if 'assertion' not in request.form:
         abort(400)
@@ -28,7 +28,7 @@ def login():
                         data=assertion_info, verify=True)
 
     if not resp.ok:
-        print "Invalid response from remote verifier"
+        print 'Invalid response from remote verifier'
         abort(500)
 
     data = resp.json()
@@ -37,46 +37,15 @@ def login():
         session.update({'email': data['email']})
         email_key = get_email_ia(request.form['assertion'])
         value = app.config['CACHE'].get(email_key)
-        if value is None:
-          print "Not found in redis, making dict"
-          value = []
-          to_store = dict()
-          to_store['bia'] = request.form['assertion']
-          value.insert(0, to_store)
-        else:
-          print "found in redis, loading data"
-          value = json.loads(value)
-          temp = value[0]
 
-          if 'bia' in temp:
-            print "we have a bia already"
-            if 'pgp' in temp:
-              print "we have a pgp already, creating new store"
-              to_store = dict()
-              to_store['bia'] = request.form['assertion']
-              value.insert(0, to_store)
+        value, flag = which_store(value, 'bia', request.form['assertion'])
 
-            else:
-              print "no pgp, overwriting floating bia"
-              temp['bia'] = request.form['assertion']
-              value[0] = temp
-
-          else:
-            print "no bia"
-            if 'pgp' in temp:
-              print "updating floating pgp value"
-              temp['bia'] = request.form['assertion']
-              value[0] = temp
-              matched = True
-              pgp_key = temp['pgp']
-
-            else:
-              print "Somehow we got into a bad state"
-              abort(500)
-
-
+        print 'storing under email'
         app.config['CACHE'].set(email_key, json.dumps(value))
-        if matched:
+
+        if flag:
+          print 'storing under pgp key'
+          pgp_key = value[0]['pgp']
           app.config['CACHE'].set(pgp_key, json.dumps(value))
         return resp.content
 
@@ -89,7 +58,6 @@ def logout():
 def store():
   session.permanent = True
   verifier = Email()
-  matched = False
 
   if verify_store_args(request.args):
     email = request.args.getlist('email')
@@ -113,48 +81,15 @@ def store():
 
     value = app.config['CACHE'].get(email_key)
 
-    if value is None:
-      print "email not found in storage"
-      value = []
-      to_update = dict()
-      to_update['pgp'] = pgp[0]
-      value.insert(0, to_update)
-    else:
-      print "email found in storage"
-      value = json.loads(value)
-      temp = value[0] # load latest store
+    value, flag = which_store(value, 'pgp', pgp_key)
 
-      # Check if update vs. create
-      if 'bia' in temp:
-        # Either create or update
-        if 'pgp' in temp:
-          # Create a new entry
-          to_store = dict()
-          to_store['pgp'] = pgp[0]
-          value.insert(0, to_store)
-
-        else:
-          # match pgp with bia
-          temp['pgp'] = pgp[0]
-          matched = True
-
-      else:
-        # Error or overwrite unassociated pgp key
-        if 'pgp' in temp:
-          # overwrite unassociated pgp key
-          temp['pgp'] = pgp[0]
-          value[0] = temp
-
-        else:
-          # We should not get here. Invalid data has been stored
-          abort(500)
-
-
-    print "storing under email"
+    print 'storing under email'
     app.config['CACHE'].set(email_key, json.dumps(value))
 
-    if matched:
-      print "storing under pgp"
+
+    if flag:
+      print 'storing under pgp key'
+      pgp_key = value[0]['pgp']
       app.config['CACHE'].set(pgp_key, json.dumps(value))
 
     return jsonify({'success': True})
@@ -184,13 +119,32 @@ def search():
 
     value = json.loads(value)
     temp = value[0]
-    if 'bia' not in temp:
-      print "Invlaid store. No bia associated with this key"
-      abort(404)
 
-    if 'pgp' not in temp:
-      print "Invalid store. No pgp key associated."
-      abort(404)
+    if 'bia' in temp and 'pgp' in temp:
+      return Response(json.dumps(value), mimetype='application/json')
+
+    if 'bia' not in temp and 'pgp' not in temp:
+      print 'somehow stored an invalid record without pgp and bia'
+      abort(500)
+
+    if 'bia' not in temp or 'pgp' not in temp:
+      print 'unmatched pgp to bia, returning first matched record'
+      # If pgp unmatched to bia, return first matched record
+
+      if len(value) < 2:
+        # We only 1 record in the list, unmatched. Don't return
+        print 'No matched records to return'
+        abort(404)
+
+      else:
+        print 'Removing unmatched record from return list'
+        value.pop(0)
+
+      if not isinstance(value, list):
+        print 'Making sure record is a list'
+        value = [value]
+
+      return Response(json.dumps(value), mimetype='application/json')
 
     # Use thig instead of jsonify, jsonify doesn't allow lists
     return Response(json.dumps(value), mimetype='application/json')
