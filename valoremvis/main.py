@@ -208,12 +208,7 @@ def verify_store_args(args):
       pgp = args.getlist('pgp')
       if len(email) == 1 and len(pgp) == 1:
         return True
-      else:
-        return False
-    else:
-      return False
-  else:
-    return False
+  return False
 
 def verify_search_args(args):
   '''
@@ -236,14 +231,7 @@ def verify_search_args(args):
       if len(email) == 1:
         if verifier(email[0]):
           return True
-        else:
-          return False
-      else:
-        return False
-    else:
-      return False
-  else:
-    return False
+  return False
 
 
 def get_pgp_key(pgp):
