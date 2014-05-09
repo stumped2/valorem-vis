@@ -63,7 +63,6 @@ def store():
     email = request.args.getlist('email')
     pgp = request.args.getlist('pgp')
 
-    #pgp_key = get_pgp_key(pgp[0])
     pgp_key = pgp[0]
     email_key = email[0]
 
@@ -232,22 +231,5 @@ def verify_search_args(args):
         if verifier(email[0]):
           return True
   return False
-
-
-def get_pgp_key(pgp):
-  '''
-  Rudamentory format checking for Privly assertion.
-  Will extract a PGP public key to be used as a key in storage.
-  '''
-
-  try:
-    ia = pgp.split('.')
-    if len(ia) == 2:
-      return ia[0]
-    else:
-      return None
-  except:
-    return None
-
 
 # TODO: Verify the pgp pub key and signature match]
