@@ -145,7 +145,7 @@ def search():
 
       return Response(json.dumps(value), mimetype='application/json')
 
-    # Use thig instead of jsonify, jsonify doesn't allow lists
+    # Use this instead of jsonify, jsonify doesn't allow lists
     return Response(json.dumps(value), mimetype='application/json')
 
   else:
@@ -155,8 +155,8 @@ def search():
 
 def get_email_ia(backedia):
   '''
-  Rudamentory format checking of the backed ia.
-  Given a backed identity assertion, it will extrac the email from it
+  Rudimentary format checking of the backed ia.
+  Given a backed identity assertion, it will extract the email from it
   to be used as a key for storage.
 
   BUG: It seems persona right now is sending back incorrectly padded certs
@@ -207,7 +207,7 @@ def verify_store_args(args):
 def verify_search_args(args):
   '''
   len of args must be 1.
-  "PGP" or "Email" must be the search by arguement.
+  "PGP" or "Email" must be the search by argument.
   len of list of data associated with the search key must be 1.
   If "Email" is the key, verify email sent is a correctly formatted email
   '''
