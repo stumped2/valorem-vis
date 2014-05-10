@@ -3,7 +3,7 @@ import redis
 import requests
 from flask import Flask, session, request, abort, jsonify, render_template, redirect, Response
 from lepl.apps.rfc3696 import Email
-from base64 import b64decode
+import base64
 from dirp_storage import which_store
 
 app = Flask(__name__)
@@ -162,30 +162,25 @@ def get_email_ia(backedia):
   BUG: It seems persona right now is sending back incorrectly padded certs
        for some email addresses. Our current fix is to add a single or a double
        '=' character. If that still doesn't work, then fail outright.
+       This bug is addressed by using the added from_base64url function which
+       will pad the base64 url correctly.
   '''
 
   verifier = Email()
+
+  # Try to break up the BIA into useful parts
   try:
     ia = backedia.replace('~','.').split('.')
   except:
     print "Invalid backed identity assertion format"
     return None
 
+  # Try to decode the User Certificate to get the email
   try:
-    cert = b64decode(ia[1])
-  except TypeError:
-    print "Concluding Cert needs padding 1"
-    ia[1] += "="  # add first padding char
-    try:
-      cert = b64decode(ia[1])
-    except TypeError:
-      print "Concluding Cert needs padding 2"
-      ia[1] += "="  # add second padding char
-      try:
-        cert = b64decode(ia[1])
-      except:
-        print "Concluding invalid Cert."
-        return None
+    cert = from_base64url(str(ia[1]))
+  except:
+    print "Invalid user certificate"
+    return None
 
   cert = json.loads(cert)
   if verifier(cert['principal']['email']):
@@ -233,3 +228,6 @@ def verify_search_args(args):
   return False
 
 # TODO: Verify the pgp pub key and signature match]
+
+def from_base64url(src):
+    return base64.urlsafe_b64decode(src + '=' * (len(src) % 4 ))
