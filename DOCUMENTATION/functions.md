@@ -51,7 +51,7 @@ curl --data "assertion=<backed identity assertion>&audience=<dns:port>" https://
 ```
 
 ### Returns
-If for some reason the ```assertion``` is not in the request, the page should return an ```HTTP 400``` error indication an bad request.
+If for some reason the ```assertion``` is not in the request, the page should return an ```HTTP 400``` error indicating a bad request.
 
 The ```login``` function is also crucial because we store the **_verified_** backed identity assertion into the key-value store under the email address the user logged into persona with.
 
