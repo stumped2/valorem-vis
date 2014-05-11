@@ -4,7 +4,6 @@ While some of the functions listed here do not take and actual parameter to func
 
 index
 =====
-### Description
 This function is the landing point for the Directory Provider.
 It renders the ```index.html``` page that allows to user to "login" to persona.
 
@@ -18,13 +17,12 @@ It should do nothing more than just facilitate the persona login process for the
 
 login
 =====
-### Description
 This function is responsible for handling the Persona log in protocol.
 
 ### Params
 The landing point should be a ```POST``` request with the Persona Backed Identity Assertion (or referred to as ```assertion```) in the data.
 ### Usage
-If the ```assertion``` was sent in the request, we must send it to a Persona verifier. The ```assertion``` is then sent to a Persona Remote Verifier and once verified, the ```assert``` is stored in the key-value store.
+If the ```assertion``` was sent in the request, we must send it to a Persona verifier. Once verified, the ```assertion``` is stored in the key-value store.
 
 There are 2 fields of data to send to the Persona verifier:
 
@@ -35,7 +33,7 @@ There are 2 fields of data to send to the Persona verifier:
 }
 ```
 
-Using this python flask as locally as an example:
+Using this python flask as a local example:
 ```javascript
 {
   'assertion': <Persona backed identity assertion>,
@@ -57,7 +55,6 @@ The ```login``` function is also crucial because we store the **_verified_** bac
 
 logout
 ======
-### Description
 ### Params
 ### Usage
 ### Returns
@@ -67,7 +64,6 @@ It will redirect to the index page of the Directory Provider.
 
 store
 =====
-### Description
 ### Params
 ### Usage
 ### Returns
@@ -80,42 +76,36 @@ This function is what will take the PGP public key from the Privly PGP applicati
 
 search
 ======
-### Description
 ### Params
 ### Usage
 ### Returns
 
 get_email_ia
 ============
-### Description
 ### Params
 ### Usage
 ### Returns
 
 verify_store_args
 =================
-### Description
 ### Params
 ### Usage
 ### Returns
 
 verify_search_args
 ==================
-### Description
 ### Params
 ### Usage
 ### Returns
 
 from_bas64url
 =============
-### Description
 ### Params
 ### Usage
 ### Returns
 
 which_store
 ===========
-### Description
 ### Params
 ### Usage
 ### Returns
