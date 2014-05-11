@@ -44,13 +44,14 @@ Using this python flask as locally as an example:
 ```
 
 Right now, we use Persona's remote verifier to verify the ```assertion```. The url is ```https://verifier.login.persona.org/verify```.
-You can check this manually using a tool like ```curl```:
+You can check this verification manually using a tool like ```curl```:
 
 ```
 curl --data "assertion=<backed identity assertion>&audience=<dns:port>" https://verifier.login.persona.org/verify
 ```
+
 ### Returns
- If for some reason the ```assertion``` is not in the request, the page should return an ```HTTP 400``` error indication an bad request.
+If for some reason the ```assertion``` is not in the request, the page should return an ```HTTP 400``` error indication an bad request.
 
 The ```login``` function is also crucial because we store the **_verified_** backed identity assertion into the key-value store under the email address the user logged into persona with.
 
